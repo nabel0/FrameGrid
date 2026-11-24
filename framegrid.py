@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # FrameGrid — Copyright (C) 2026 Javier
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""FrameGrid — gestor de carátulas (SteamGridDB) y colecciones para Steam Frame / SteamOS.
+"""FrameGrid — SteamGridDB artwork and collections manager for Steam Frame / SteamOS.
 
-Arranca un servidor local en 127.0.0.1 y abre la interfaz en el navegador
-(o en el navegador interno de Steam). Solo usa la librería estándar de Python.
+Starts a local server on 127.0.0.1 and opens the interface in a browser
+(or Steam's built-in browser). Uses only the Python standard library.
 """
 from __future__ import annotations
 
@@ -67,24 +67,24 @@ class App:
     def user(self) -> steam.SteamUser:
         root = self.root
         if not root:
-            raise RuntimeError("No encuentro la instalación de Steam (carpeta userdata).")
+            raise RuntimeError("Could not find the Steam installation (userdata folder).")
         users = steam.list_users(root)
         uid = self.cfg.get("user")
         if not uid or not any(u["id"] == uid for u in users):
             if not users:
-                raise RuntimeError("No hay usuarios en Steam/userdata. Inicia sesión en Steam una vez.")
+                raise RuntimeError("No users found in Steam/userdata. Sign in to Steam once.")
             uid = users[0]["id"]
         return steam.SteamUser(root, uid)
 
     def sgdb(self) -> sgdb.SGDB:
         key = self.cfg.get("api_key")
         if not key:
-            raise RuntimeError("Falta la API key de SteamGridDB (Ajustes).")
+            raise RuntimeError("Missing SteamGridDB API key (Settings).")
         return sgdb.SGDB(key)
 
     # ------------------------------------------------ modo de trabajo
     def mode(self) -> str:
-        """live = Steam abierto con depurador CEF (como Decky) · files = Steam cerrado · limited = abierto sin depurador."""
+        """live = Steam running with the CEF debugger (like Decky) · files = Steam closed · limited = running without the debugger."""
         if self.live.available():
             return "live"
         return "limited" if steam.steam_running() else "files"
@@ -92,8 +92,8 @@ class App:
     def need_write_mode(self) -> str:
         m = self.mode()
         if m == "limited":
-            raise RuntimeError("Steam está abierto y su depurador CEF no está activo. Pulsa «Activar modo en vivo» "
-                               "y reinicia la Steam Frame (o activa Ajustes › Desarrollador › Depuración remota CEF).")
+            raise RuntimeError("Steam is running but its CEF debugger is not active. Click “Enable live mode” "
+                               "and restart Steam Frame (or enable Settings › Developer › CEF Remote Debugging).")
         return m
 
     def cef_flag_paths(self) -> list[Path]:
@@ -152,14 +152,14 @@ class App:
 
     def _apply_data(self, u: steam.SteamUser, appid: int, slot: str, data: bytes, ext: str, kind: str, mode: str):
         if ext == "webp":
-            raise RuntimeError("Steam no carga WebP desde la carpeta grid; elige una imagen PNG/JPG.")
+            raise RuntimeError("Steam does not load WebP from the grid folder; choose a PNG/JPG image.")
         if slot == "icon":
             if kind == "steam":
                 if mode != "live":
-                    raise RuntimeError("Cambiar el icono de un juego de Steam necesita el modo en vivo.")
+                    raise RuntimeError("Changing a Steam game's icon requires live mode.")
                 h = self.live.icon_hash(appid)
                 if not h:
-                    raise RuntimeError("Steam no da el icon_hash de este juego.")
+                    raise RuntimeError("Steam did not provide this game's icon_hash.")
                 return {"path": str(u.poison_steam_icon(appid, h, data)), "note": None}
             path = u.write_art(appid, "icon", data, ext)
             if mode == "live":
@@ -168,13 +168,13 @@ class App:
             if mode == "files":
                 u.sync_shortcut_icons()
                 return {"path": str(path), "note": None}
-            return {"path": str(path), "note": "Icono guardado. Se vinculará al acceso directo cuando actives el modo en vivo."}
+            return {"path": str(path), "note": "Icon saved. It will be linked to the shortcut when you enable live mode."}
         if mode == "live":
             logo_pos = slot == "logo" and kind == "shortcut" and not (u.grid / f"{appid}.json").exists()
             self.live.set_artwork(appid, slot, data, ext, logo_pos)
             return {"path": None, "note": None}
         path = u.write_art(appid, slot, data, ext)
-        note = "Guardada en la carpeta grid: se verá cuando reinicies la Steam Frame." if mode == "limited" else None
+        note = "Saved to the grid folder; it will appear after you restart Steam Frame." if mode == "limited" else None
         return {"path": str(path), "note": note}
 
     def apply(self, appid: int, slot: str, url: str, kind: str):
@@ -184,11 +184,11 @@ class App:
     def apply_bytes(self, appid: int, slot: str, data: bytes, kind: str):
         ext = imgutil.kind(data)
         if ext is None:
-            raise RuntimeError("El archivo no es una imagen PNG o JPG.")
+            raise RuntimeError("The file is not a PNG or JPG image.")
         if ext in ("webp", "gif"):
-            raise RuntimeError(f"Steam no carga imágenes {ext.upper()}. Conviértela a PNG o JPG.")
+            raise RuntimeError(f"Steam does not load {ext.upper()} images. Convert it to PNG or JPG.")
         if len(data) > 40 * 1024 * 1024:
-            raise RuntimeError("La imagen es demasiado grande (máx. 40 MB).")
+            raise RuntimeError("Image is too large (max. 40 MB).")
         return self._apply_data(self.user(), appid, slot, data, ext, kind, self.mode())
 
     def apply_local(self, appid: int, slot: str, path: str, kind: str):
@@ -201,7 +201,7 @@ class App:
         if mode == "live":
             if slot == "icon":
                 if kind == "steam":
-                    raise RuntimeError("Para restaurar el icono original de un juego de Steam, verifica sus archivos.")
+                    raise RuntimeError("To restore a Steam game's original icon, verify its files.")
                 u.remove_art(appid, "icon")
                 self.live.set_shortcut_icon(appid, "")
             else:
@@ -210,7 +210,7 @@ class App:
         return u.remove_art(appid, slot)
 
     def autofill(self, appids: list[int], slots: list[str], overwrite: bool):
-        """Para cada entrada: busca por nombre, coge el primer juego y la mejor imagen de cada tipo."""
+        """For each entry: search by name, select the first matching game, and choose the best image for each artwork type."""
         u = self.user()
         api = self.sgdb()
         mode = self.mode()
@@ -229,7 +229,7 @@ class App:
                     res = api.search(it["name"])
                     game = res[0] if res else None
                 if not game:
-                    row["error"] = "Sin resultados en SteamGridDB"
+                    row["error"] = "No results on SteamGridDB"
                 else:
                     row["game"] = game.get("name")
                     for slot in slots:
@@ -243,12 +243,12 @@ class App:
                                 self._apply_data(u, aid, slot, data, ext, it["type"], mode)
                                 row["applied"].append(slot)
                                 break
-            except Exception as e:  # seguimos con el resto
+            except Exception as e:  # continue with the remaining entries
                 row["error"] = str(e)
             report.append(row)
         return report
 
-    # ------------------------------------------------ accesos directos
+    # ------------------------------------------------ shortcuts
     def add_shortcut(self, name, exe, start_dir="", launch_options=""):
         if self.need_write_mode() == "live":
             return self.live.add_shortcut(name, exe, start_dir, launch_options)
@@ -260,7 +260,7 @@ class App:
             return True
         return self.user().remove_shortcut(appid)
 
-    # ------------------------------------------------ colecciones
+    # ------------------------------------------------ collections
     def collections(self):
         m = self.mode()
         if m == "live":
@@ -276,7 +276,7 @@ class App:
                 lv.rename_collection(b["id"], b["name"])
             elif op == "delete":
                 if b["id"] in ("favorite", "hidden"):
-                    raise RuntimeError("No se pueden borrar Favoritos/Ocultos.")
+                    raise RuntimeError("Favorites/Hidden cannot be deleted.")
                 lv.delete_collection(b["id"])
             elif op == "member":
                 lv.set_member(b["id"], [int(a) for a in b["appids"]], bool(b["member"]))
@@ -333,7 +333,7 @@ def make_handler(app: App, stop_event: threading.Event):
             return json.loads(self.rfile.read(n) or b"{}") if n else {}
 
         def _guard(self):
-            # Evita que una web cualquiera hable con este servidor local
+            # Prevent arbitrary websites from communicating with this local server
             host = (self.headers.get("Host") or "").split(":")[0]
             if host not in ("127.0.0.1", "localhost"):
                 self.send_error(403)
@@ -445,7 +445,7 @@ def free_port(start):
                 return port
             except OSError:
                 continue
-    raise RuntimeError("No hay puertos libres")
+    raise RuntimeError("No free ports available")
 
 
 def open_ui(url: str, mode: str):
@@ -453,7 +453,7 @@ def open_ui(url: str, mode: str):
     if mode == "none":
         return
     has_display = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
-    # En modo juego (gamescope) xdg-open no tiene navegador al que ir: usamos el de Steam
+    # In game mode (gamescope), xdg-open has no browser to open: use Steam's browser
     in_gamescope = os.environ.get("XDG_CURRENT_DESKTOP", "").lower() == "gamescope" or bool(os.environ.get("GAMESCOPE_WAYLAND_DISPLAY"))
     if mode == "xdg" or (mode == "auto" and has_display and not in_gamescope and shutil.which("xdg-open")):
         try:
@@ -467,41 +467,41 @@ def open_ui(url: str, mode: str):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="FrameGrid — carátulas SteamGridDB y colecciones para Steam Frame")
+    ap = argparse.ArgumentParser(description="FrameGrid — carátulas SteamGridDB y collections para Steam Frame")
     ap.add_argument("--port", type=int, default=8787)
     ap.add_argument("--open", choices=["auto", "xdg", "steam", "none"], default="auto",
-                    help="cómo abrir la interfaz (steam = navegador interno de Steam)")
-    ap.add_argument("--steam-root", help="ruta a la carpeta de Steam si no se detecta sola")
+                    help="how to open the interface (steam = Steam's built-in browser)")
+    ap.add_argument("--steam-root", help="path to the Steam folder if it is not detected automatically")
     ap.add_argument("--add-to-steam", action="store_true",
-                    help="añade FrameGrid a la biblioteca de Steam (en vivo si el depurador CEF está activo)")
+                    help="add FrameGrid to the Steam library (live mode if the CEF debugger is active)")
     ap.add_argument("--enable-cef", action="store_true",
-                    help="crea .cef-enable-remote-debugging; luego hay que reiniciar la Steam Frame")
-    ap.add_argument("--status", action="store_true", help="muestra el modo de trabajo y sale")
+                    help="create .cef-enable-remote-debugging; Steam Frame must then be restarted")
+    ap.add_argument("--status", action="store_true", help="show the current operating mode and exit")
     ap.add_argument("--version", action="version", version=VERSION)
     args = ap.parse_args()
 
     app = App(args.steam_root)
     if args.status:
         st = app.state()
-        print(f"Steam: {st['steam_root']}  usuario: {st['user']}  abierto: {st['steam_running']}")
-        print(f"Modo: {st['mode']}  (archivo CEF presente: {st['cef_flag']})")
+        print(f"Steam: {st['steam_root']}  user: {st['user']}  running: {st['steam_running']}")
+        print(f"Mode: {st['mode']}  (CEF flag present: {st['cef_flag']})")
         if st["mode"] == "live":
-            print("Contexto de Steam:", app.live.check())
+            print("Steam context:", app.live.check())
         return
     if args.enable_cef:
         for f in app.enable_cef():
-            print("Creado", f)
-        print("Reinicia la Steam Frame (o Steam) para que el depurador se active.")
+            print("Created", f)
+        print("Restart Steam Frame (or Steam) to activate the debugger.")
         return
     if args.add_to_steam:
         me = str(HERE / "framegrid.py")
         try:
             existing = [s for s in app.library() if s["type"] == "shortcut" and s["name"] == "FrameGrid"]
             if existing:
-                print("FrameGrid ya está en la biblioteca de Steam.")
+                print("FrameGrid is already in the Steam library.")
                 return
             aid = app.add_shortcut("FrameGrid", me, str(HERE), "--open steam")
-            print(f"FrameGrid añadido a Steam (appid {aid}).")
+            print(f"FrameGrid added to Steam (appid {aid}).")
         except RuntimeError as e:
             print(e)
             sys.exit(1)
@@ -510,7 +510,7 @@ def main():
     stop = threading.Event()
     srv = ThreadingHTTPServer(("127.0.0.1", port), make_handler(app, stop))
     url = f"http://127.0.0.1:{port}/"
-    print(f"FrameGrid {VERSION} en {url}  (Ctrl+C para salir)")
+    print(f"FrameGrid {VERSION} at {url}  (Ctrl+C to exit)")
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     open_ui(url, args.open)
     try:
