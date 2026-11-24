@@ -1,12 +1,12 @@
 # FrameGrid — Copyright (C) 2026 Javier
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Cliente mínimo del protocolo de depuración de Chrome (CDP) para el cliente de Steam.
+"""Minimal Chrome DevTools Protocol (CDP) client for the Steam client.
 
-Steam expone su interfaz (CEF) en http://127.0.0.1:8080 cuando la depuración remota
-está activada (archivo .cef-enable-remote-debugging o Ajustes > Desarrollador).
-En la pestaña "SharedJSContext" están SteamClient, appStore, collectionStore... que
-es lo que usan los plugins de Decky. Aquí solo hace falta WebSocket + Runtime.evaluate,
-implementados con la librería estándar.
+Steam exposes its interface (CEF) at http://127.0.0.1:8080 when remote debugging
+is enabled (the .cef-enable-remote-debugging file or Settings > Developer).
+The "SharedJSContext" tab contains SteamClient, appStore, collectionStore, and other
+objects used by Decky plugins. Only WebSocket + Runtime.evaluate are needed here,
+implemented with the standard library.
 """
 from __future__ import annotations
 
@@ -38,17 +38,17 @@ class _WebSocket:
         while b"\r\n\r\n" not in resp:
             chunk = self.sock.recv(4096)
             if not chunk:
-                raise CDPError("El depurador de Steam cerró la conexión")
+                raise CDPError("Steam's debugger closed the connection")
             resp += chunk
         head, self._buf = resp.split(b"\r\n\r\n", 1)
         if b" 101 " not in head.split(b"\r\n")[0]:
-            raise CDPError("Steam rechazó la conexión WebSocket: " + head.split(b"\r\n")[0].decode(errors="replace"))
+            raise CDPError("Steam rejected the WebSocket connection: " + head.split(b"\r\n")[0].decode(errors="replace"))
 
     def _recv_exact(self, n):
         while len(self._buf) < n:
             chunk = self.sock.recv(max(65536, n - len(self._buf)))
             if not chunk:
-                raise CDPError("Conexión con Steam perdida")
+                raise CDPError("Connection to Steam lost")
             self._buf += chunk
         out, self._buf = self._buf[:n], self._buf[n:]
         return out
@@ -65,7 +65,7 @@ class _WebSocket:
             hdr.append(0x80 | 127); hdr += struct.pack(">Q", n)
         mask = os.urandom(4)
         hdr += mask
-        # enmascarado rápido con aritmética de enteros grandes
+        # fast masking using large-integer arithmetic
         m = (mask * (n // 4 + 1))[:n]
         masked = (int.from_bytes(payload, "big") ^ int.from_bytes(m, "big")).to_bytes(n, "big") if n else b""
         self.sock.sendall(bytes(hdr) + masked)
@@ -85,7 +85,7 @@ class _WebSocket:
             if mask:
                 data = bytes(c ^ mask[i % 4] for i, c in enumerate(data))
             if op == 0x8:
-                raise CDPError("Steam cerró la conexión")
+                raise CDPError("Steam closed the connection")
             if op == 0x9:  # ping -> pong
                 self.sock.sendall(bytes([0x8A, 0x80 | len(data)]) + b"\0\0\0\0" + data)
                 continue
@@ -111,7 +111,7 @@ class SteamCDP:
             with urllib.request.urlopen(self.base + "/json", timeout=timeout) as r:
                 return json.loads(r.read().decode())
         except Exception as e:
-            raise CDPError(f"Depurador de Steam no disponible en {self.base} ({e})")
+            raise CDPError(f"Steam debugger unavailable at {self.base} ({e})")
 
     def shared_context(self) -> dict:
         tabs = self.targets()
@@ -133,7 +133,7 @@ class SteamCDP:
             return False
 
     def run(self, body: str, timeout=30):
-        """Ejecuta JS dentro de una función async en el contexto de Steam y devuelve lo que haga `return`."""
+        """Runs JS inside an async function in Steam's context and returns its `return` value."""
         expr = "(async()=>{ const __r = await (async()=>{ " + body + " })(); return JSON.stringify(__r === undefined ? null : __r); })()"
         tab = self.shared_context()
         ws = _WebSocket(tab["webSocketDebuggerUrl"], timeout=timeout)
@@ -151,7 +151,7 @@ class SteamCDP:
         res = msg.get("result", {})
         if res.get("exceptionDetails"):
             ed = res["exceptionDetails"]
-            desc = (ed.get("exception") or {}).get("description") or ed.get("text") or "error JS"
-            raise CDPError("Error dentro de Steam: " + desc.splitlines()[0])
+            desc = (ed.get("exception") or {}).get("description") or ed.get("text") or "JavaScript error"
+            raise CDPError("Error inside Steam: " + desc.splitlines()[0])
         val = res.get("result", {}).get("value")
         return json.loads(val) if isinstance(val, str) else val
