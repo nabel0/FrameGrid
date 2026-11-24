@@ -22,7 +22,7 @@ On Steam Frame there is no Decky Loader, the *Manage › Set custom artwork* opt
 ## Features
 
 - **Artwork**: search SteamGridDB and apply a capsule (600×900), wide capsule (920×430), hero, logo or icon to Steam games and non-Steam shortcuts.
-- **Your own images**: for games that are not on SteamGridDB, browse your Pictures folder or upload a PNG/JPG file. Images with the right shape for the selected slot are marked *encaja* (fits).
+- **Your own images**: for games that are not on SteamGridDB, browse your Pictures folder or upload a PNG/JPG file. Images with the right shape for the selected slot are marked *fits*.
 - **Auto-fill**: tick several games and fill every empty artwork slot with one click.
 - **Icons**: for non-Steam shortcuts, and for Steam games in live mode.
 - **Collections**: create, rename and delete collections, and add or remove games, including non-Steam shortcuts, from Favorites, Hidden or your own collections.
@@ -64,9 +64,9 @@ Steam cannot be closed on Steam Frame. FrameGrid therefore talks to the **runnin
 
 1. Open FrameGrid and click **"Activate live mode"** (the button reads *Enable live mode* in the app). From a terminal you can run `python3 framegrid.py --enable-cef` instead. Either way, FrameGrid creates the file `~/.steam/steam/.cef-enable-remote-debugging`.
 2. **Restart the Steam Frame.** The debugger only starts when Steam starts.
-3. Open FrameGrid again. The indicator in the top-left corner should now read **"En vivo"** (live), in green.
+3. Open FrameGrid again. The indicator in the top-left corner should now read **"Live"**, in green.
 
-   <img src="docs/screenshots/live-mode-indicator.png" alt="FrameGrid header with the green "En vivo" (live) indicator" width="300">
+   <img src="docs/screenshots/live-mode-indicator.png" alt="FrameGrid header with the green "Live" indicator" width="300">
 
 
 If it still does not switch after the restart, enable the debugger from Steam's settings instead: **System → Enable Developer Mode**, then **Developer → CEF Remote Debugging**, and restart again.
@@ -93,24 +93,24 @@ FrameGrid picks the mode automatically and shows it in the top-left indicator.
 
 | Indicator | When | What you can do |
 |---|---|---|
-| **En vivo** (live) | Steam is running and the CEF debugger is active | Everything, applied instantly |
-| **Steam cerrado · archivos** (Steam closed · files) | Steam is not running, for example on a desktop PC | Everything, by editing `shortcuts.vdf`, the `grid` folder and `cloudstorage` directly |
-| **Sin modo en vivo** (no live mode) | Steam is running without the debugger | Artwork only. It is saved to the `grid` folder and appears **after restarting** the device. Collections and shortcuts are blocked until live mode is on. |
+| **Live** | Steam is running and the CEF debugger is active | Everything, applied instantly |
+| **Steam closed · files** | Steam is not running, for example on a desktop PC | Everything, by editing `shortcuts.vdf`, the `grid` folder and `cloudstorage` directly |
+| **No live mode** | Steam is running without the debugger | Artwork only. It is saved to the `grid` folder and appears **after restarting** the device. Collections and shortcuts are blocked until live mode is on. |
 
 ## Usage
 
 1. On first launch, paste your **SteamGridDB API key** in *Settings* (Settings). It is stored in `~/.config/framegrid/config.json` with permissions 600.
 2. **Artwork**
-   1. Pick a game in the left list. The *No-Steam*, *Steam* and *Todos* (All) tabs filter the list.
+   1. Pick a game in the left list. The *No-Steam*, *Steam* and *All* tabs filter the list.
    2. Choose a slot: *Poster* (600×900 capsule), *Wide* (920×430 capsule), *Hero*, *Logo* or *Icon*.
-   3. Click an image to apply it. The *Animadas*, *Humor* and *NSFW* filters change which results are shown.
+   3. Click an image to apply it. The *Animated*, *Humor* and *NSFW* filters change which results are shown.
    4. **Not on SteamGridDB?** Switch to the *My images* tab. It opens your Pictures folder; browse into subfolders and click an image to apply it, or press *Upload file* to pick any PNG/JPG. *Only fitting images* hides images with the wrong shape for the slot, and *Set as default folder* makes the current folder open by default.
 3. **Auto-fill**: tick several games, then press **"Auto-rellenar desde SteamGridDB"**. Tick *Sobrescribir existentes* to also replace artwork you already set.
 4. **Collections** (*Collections* tab):
-   1. To create one, type a name and press **Crear** (Create). It opens straight away in edit mode.
+   1. To create one, type a name and press **Create**. It opens straight away in edit mode.
    2. To change an existing one, press **Edit games** next to it.
    3. While editing, a blue banner appears above the game list and each checkbox means "this game is in the collection". Tick or untick games; every change is saved immediately. *Add all* puts every game currently shown in the list into the collection, so you can filter first.
-   4. Press **Terminar** (Done) when you are finished.
+   4. Press **Done** when you are finished.
 
    <img src="docs/screenshots/04-framegrid-collections.png" alt="FrameGrid editing the Ports collection" width="800">
 
@@ -121,7 +121,7 @@ FrameGrid picks the mode automatically and shows it in the top-left indicator.
    <em>The resulting *Ports* collection in the Steam Frame library, with its artwork.</em>
 
 5. **Add a non-Steam app** (*Add non-Steam app* tab): enter a name and the executable path. The start folder and launch options are optional.
-6. Click **Salir** (Quit) when you are done.
+6. Click **Quit** when you are done.
 
 > Non-Steam shortcut IDs are local to each machine. That is why collections containing non-Steam apps cannot be prepared on another PC and must be edited on the device itself. FrameGrid does exactly that.
 
@@ -154,7 +154,7 @@ To turn the debugger off, delete `~/.steam/steam/.cef-enable-remote-debugging` a
 
 | Problem | Fix |
 |---|---|
-| The indicator stays on *Sin modo en vivo* after restarting | Check that the file `~/.steam/steam/.cef-enable-remote-debugging` exists, or enable *CEF Remote Debugging* in Steam's Developer settings. Run `--status`. |
+| The indicator stays on *No live mode* after restarting | Check that the file `~/.steam/steam/.cef-enable-remote-debugging` exists, or enable *CEF Remote Debugging* in Steam's Developer settings. Run `--status`. |
 | "Invalid SteamGridDB API key (401)" | Generate a new key on steamgriddb.com and paste it in *Settings* |
 | Artwork does not show (no-live mode) | Restart the device. Without live mode, Steam only reads the `grid` folder when it starts. |
 | Steam is not detected | Use `--steam-root ~/.local/share/Steam`, or set the Steam folder in *Settings* |
