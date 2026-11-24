@@ -1,6 +1,6 @@
 # FrameGrid — Copyright (C) 2026 Javier
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Acceso a la instalación local de Steam: usuarios, accesos directos, juegos, carpeta grid."""
+"""Access to the local Steam installation: users, shortcuts, games, and the grid folder."""
 from __future__ import annotations
 
 import os
@@ -14,13 +14,13 @@ from . import vdf
 
 STEAMID64_BASE = 76561197960265728
 
-# Nombre de archivo en config/grid para cada tipo de imagen ({id} = appid sin signo)
+# Filename in config/grid for each artwork type ({id} = unsigned app ID)
 SLOTS = {
-    "capsule": "{id}p",      # póster vertical 600x900
-    "wide": "{id}",          # cápsula horizontal 920x430
+    "capsule": "{id}p",      # portrait poster 600x900
+    "wide": "{id}",          # landscape capsule 920x430
     "hero": "{id}_hero",     # banner de cabecera 1920x620
     "logo": "{id}_logo",     # logo transparente
-    "icon": "{id}_icon",     # icono (accesos directos: además se apunta en shortcuts.vdf)
+    "icon": "{id}_icon",     # icon (shortcuts are also referenced in shortcuts.vdf)
 }
 IMG_EXTS = ("png", "jpg", "jpeg", "webp", "gif", "ico")
 
@@ -109,7 +109,7 @@ def start_steam():
 
 
 def shortcut_appid(exe: str, name: str) -> int:
-    """AppID clásico de accesos directos: crc32(exe+nombre) | 0x80000000."""
+    """Classic shortcut AppID: crc32(exe+name) | 0x80000000."""
     return (zlib.crc32((exe + name).encode("utf-8")) & 0xFFFFFFFF) | 0x80000000
 
 
@@ -121,7 +121,7 @@ class SteamUser:
         self.grid = self.config / "grid"
         self.shortcuts_path = self.config / "shortcuts.vdf"
 
-    # ------------------------------------------------ accesos directos
+    # ------------------------------------------------ shortcuts
     def load_shortcuts(self) -> dict:
         if not self.shortcuts_path.is_file():
             return {"shortcuts": {}}
@@ -129,7 +129,7 @@ class SteamUser:
 
     def save_shortcuts(self, data: dict):
         if steam_running():
-            raise RuntimeError("Cierra Steam antes de modificar shortcuts.vdf (Steam lo sobrescribe al salir).")
+            raise RuntimeError("Close Steam before modifying shortcuts.vdf (Steam overwrites it on exit).")
         self.config.mkdir(parents=True, exist_ok=True)
         if self.shortcuts_path.is_file():
             bak = self.config / f"shortcuts.vdf.framegrid-{time.strftime('%Y%m%d-%H%M%S')}.bak"
@@ -214,7 +214,7 @@ class SteamUser:
         return True
 
     def sync_shortcut_icons(self) -> int:
-        """Apunta el campo icon de cada acceso directo a su <appid>_icon.* de la carpeta grid."""
+        """Points each shortcut's icon field to its <appid>_icon.* file in the grid folder."""
         data = self.load_shortcuts()
         changed = 0
         for e in data.get("shortcuts", {}).values():
@@ -258,7 +258,7 @@ class SteamUser:
         out.sort(key=lambda g: g["name"].lower())
         return out
 
-    # ------------------------------------------------ imágenes
+    # ------------------------------------------------ artwork
     def art_path(self, appid: int, slot: str) -> Path | None:
         base = SLOTS[slot].format(id=appid)
         for ext in IMG_EXTS:
@@ -289,7 +289,7 @@ class SteamUser:
         return dest
 
     def poison_steam_icon(self, appid: int, icon_hash: str, data: bytes) -> Path:
-        """Icono de un juego de Steam: se sustituye su archivo en la caché (método de decky-steamgriddb/SGDBoop).
+        """Steam game icon: replace its cache file (the decky-steamgriddb/SGDBoop method).
         Se escribe a un temporal y se renombra, porque Steam restaura el original si ve que se escribe directamente."""
         d = self.root / "appcache" / "librarycache" / str(appid)
         d.mkdir(parents=True, exist_ok=True)
