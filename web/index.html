@@ -322,7 +322,7 @@ $("sSave").onclick = async ()=>{
   const b = {user:$("sUser").value};
   if($("sKey").value.trim()) b.api_key = $("sKey").value.trim();
   if($("sRoot").value.trim()) b.steam_root = $("sRoot").value.trim();
-  try{ S.state = await api("/api/config", b); $("settings").classList.remove("show"); toast("Settings guardados","ok");
+  try{ S.state = await api("/api/config", b); $("settings").classList.remove("show"); toast("Settings saved","ok");
        await refreshState(); await loadLib(); }catch(e){ toast(e.message,"err"); }
 };
 
@@ -396,7 +396,7 @@ function renderSlots(){
 $("slots").onclick = async e=>{
   const rm = e.target.dataset.rm;
   if(rm){ e.stopPropagation();
-    try{ await api("/api/remove",{appid:S.sel.appid, slot:rm, kind:S.sel.type}); toast("Imagen quitada"); await loadLib(); }
+    try{ await api("/api/remove",{appid:S.sel.appid, slot:rm, kind:S.sel.type}); toast("Image removed"); await loadLib(); }
     catch(err){ toast(err.message,"err"); } return; }
   const s = e.target.closest(".slot"); if(!s) return;
   S.slot = s.dataset.slot; renderSlots(); if(S.game) loadAssets(true); renderLocal();
@@ -527,7 +527,7 @@ $("btnAuto").onclick = async ()=>{
   await loadLib();
 };
 
-// ---------------------------------------------------------- colecciones
+// ---------------------------------------------------------- collections
 async function loadCols(){
   try{ S.cols = (await api("/api/collections")).items; }catch(e){ S.cols=[]; toast(e.message,"err"); }
   if(S.editCol && !editCol()) S.editCol=null;
@@ -552,7 +552,7 @@ function renderCols(){
   const dis = S.state.mode==="limited" ? "disabled" : "";
   const ec = editCol();
   $("colsHelp").innerHTML = ec
-    ? `Editing <b>${esc(ec.name)}</b>: marca en la lista de la izquierda los games que quieras dentro. Pulsa «Done» cuando acabes.`
+    ? `Editing <b>${esc(ec.name)}</b>: tick the games you want to include in the list on the left. Press “Done” when finished.`
     : `Click <b>Edit games</b> on a collection and select its games in the list on the left.`;
   $("cols").innerHTML = S.cols.map(c=>`<div class="col ${S.editCol===c.id?"editing":""}">
       <div class="n">${esc(c.name)}<span>${c.dynamic?"dynamic (edit in Steam)":c.added.length+" games"}</span></div>
@@ -582,7 +582,7 @@ $("btnNewCol").onclick = async ()=>{
   const n=$("newCol").value.trim(); if(!n) return;
   try{ const r = await api("/api/collections/create",{name:n, appids:[...S.marked]}); $("newCol").value="";
        S.marked.clear(); await loadCols();
-       if(r.id && S.cols.find(c=>c.id===r.id)){ startEdit(r.id); toast(`Collection “${n}» creada. Ahora marca sus games en la lista.`,"ok",7000); }
+       if(r.id && S.cols.find(c=>c.id===r.id)){ startEdit(r.id); toast(`Collection “${n}” created. Now select its games in the list.`,"ok",7000); }
        else toast("Collection created","ok");
   }catch(e){ toast(e.message,"err"); }
 };
@@ -591,13 +591,13 @@ $("newCol").onkeydown = e=>{ if(e.key==="Enter") $("btnNewCol").click(); };
 // ---------------------------------------------------------- add non-Steam app
 $("btnAdd").onclick = async ()=>{
   const name=$("aName").value.trim(), exe=$("aExe").value.trim();
-  if(!name||!exe){ toast("Name y ejecutable son obligatorios","err"); return; }
+  if(!name||!exe){ toast("Name and executable are required","err"); return; }
   try{
     const r = await api("/api/shortcut/add",{name, exe, start_dir:$("aDir").value.trim(), launch_options:$("aOpts").value.trim()});
     toast(`Added “${name}” (app ID ${r.appid})`,"ok");
     if($("aAuto").checked && S.state.has_key){
       const rep = await api("/api/autofill",{appids:[r.appid]});
-      if(rep[0]&&rep[0].error) toast("Artwork: "+rep[0].error,"err"); else toast("Artwork descargadas","ok");
+      if(rep[0]&&rep[0].error) toast("Artwork: "+rep[0].error,"err"); else toast("Artwork downloaded","ok");
     }
     ["aName","aExe","aDir","aOpts"].forEach(id=>$(id).value="");
     await loadLib();
