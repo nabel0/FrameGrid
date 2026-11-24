@@ -84,7 +84,7 @@ class SteamLive:
     def remove_shortcut(self, appid: int):
         self.cdp.run(f"SteamClient.Apps.RemoveShortcut({int(appid)}); return true;")
 
-    # ------------------------------------------------ colecciones
+    # ------------------------------------------------ collections
     def collections(self) -> list[dict]:
         return self.cdp.run("""
             const ids = c => {
