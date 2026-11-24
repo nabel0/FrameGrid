@@ -467,7 +467,7 @@ def open_ui(url: str, mode: str):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="FrameGrid — carátulas SteamGridDB y collections para Steam Frame")
+    ap = argparse.ArgumentParser(description="FrameGrid — SteamGridDB artwork and collections for Steam Frame")
     ap.add_argument("--port", type=int, default=8787)
     ap.add_argument("--open", choices=["auto", "xdg", "steam", "none"], default="auto",
                     help="how to open the interface (steam = Steam's built-in browser)")
