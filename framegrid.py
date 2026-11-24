@@ -21,7 +21,7 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-HERE = Path(__file__).resolve().paratt
+HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from fg import sgdb, steam  # noqa: E402
