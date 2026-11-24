@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # FrameGrid — Copyright (C) 2026 Javier
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Instala FrameGrid en ~/.local/share/framegrid y crea el lanzador del escritorio.
-#   ./install.sh            -> instala + acceso en el menú de KDE
-#   ./install.sh --steam    -> además lo añade a la biblioteca de Steam (en vivo, sin cerrar Steam)
+# Install FrameGrid to ~/.local/share/framegrid and create the desktop launcher.
+#   ./install.sh            -> install + KDE application menu entry
+#   ./install.sh --steam    -> also add it to the Steam library (live mode, without closing Steam)
 #   ./install.sh --uninstall
 set -euo pipefail
 SRC="$(cd "$(dirname "$0")" && pwd)"
@@ -13,12 +13,12 @@ DESKTOP_FILE="$APPS/framegrid.desktop"
 
 if [[ "${1:-}" == "--uninstall" ]]; then
   rm -rf "$DEST" "$DESKTOP_FILE" "$HOME/Desktop/framegrid.desktop"
-  echo "FrameGrid desinstalado (tu API key sigue en ~/.config/framegrid; bórrala si quieres)."
+  echo "FrameGrid uninstalled (your API key remains in ~/.config/framegrid; delete it if you wish)."
   exit 0
 fi
 
-command -v python3 >/dev/null || { echo "Falta python3"; exit 1; }
-python3 - <<'EOF' || { echo "Se necesita Python 3.9 o superior"; exit 1; }
+command -v python3 >/dev/null || { echo "python3 is missing"; exit 1; }
+python3 - <<'EOF' || { echo "Python 3.9 or later is required"; exit 1; }
 import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)
 EOF
 
@@ -30,7 +30,7 @@ cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FrameGrid
-Comment=Carátulas de SteamGridDB y colecciones para Steam
+Comment=SteamGridDB artwork and collections for Steam
 Exec=python3 $DEST/framegrid.py
 Icon=$DEST/framegrid.svg
 Terminal=false
@@ -42,10 +42,10 @@ if [[ -d "$HOME/Desktop" ]]; then
   chmod +x "$HOME/Desktop/framegrid.desktop"
 fi
 command -v update-desktop-database >/dev/null && update-desktop-database "$APPS" >/dev/null 2>&1 || true
-echo "Instalado en $DEST — búscalo como «FrameGrid» en el menú de aplicaciones."
+echo "Installed to $DEST — look for “FrameGrid” in the application menu."
 
 if [[ "${1:-}" == "--steam" ]]; then
-  # Con Steam abierto usa el modo en vivo (depurador CEF); no hace falta cerrar Steam
+  # With Steam running, use live mode (CEF debugger); no need to close Steam
   python3 "$DEST/framegrid.py" --add-to-steam
 fi
 echo
