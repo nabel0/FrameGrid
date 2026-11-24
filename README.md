@@ -105,7 +105,7 @@ FrameGrid picks the mode automatically and shows it in the top-left indicator.
    2. Choose a slot: *Poster* (600×900 capsule), *Wide* (920×430 capsule), *Hero*, *Logo* or *Icon*.
    3. Click an image to apply it. The *Animated*, *Humor* and *NSFW* filters change which results are shown.
    4. **Not on SteamGridDB?** Switch to the *My images* tab. It opens your Pictures folder; browse into subfolders and click an image to apply it, or press *Upload file* to pick any PNG/JPG. *Only fitting images* hides images with the wrong shape for the slot, and *Set as default folder* makes the current folder open by default.
-3. **Auto-fill**: tick several games, then press **"Auto-rellenar desde SteamGridDB"**. Tick *Sobrescribir existentes* to also replace artwork you already set.
+3. **Auto-fill**: tick several games, then press **"Auto-fill from SteamGridDB"**. Tick *Overwrite existing artwork* to also replace artwork you already set.
 4. **Collections** (*Collections* tab):
    1. To create one, type a name and press **Create**. It opens straight away in edit mode.
    2. To change an existing one, press **Edit games** next to it.
