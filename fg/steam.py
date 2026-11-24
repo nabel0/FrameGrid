@@ -18,7 +18,7 @@ STEAMID64_BASE = 76561197960265728
 SLOTS = {
     "capsule": "{id}p",      # portrait poster 600x900
     "wide": "{id}",          # landscape capsule 920x430
-    "hero": "{id}_hero",     # banner de cabecera 1920x620
+    "hero": "{id}_hero",     # header banner 1920x620
     "logo": "{id}_logo",     # logo transparente
     "icon": "{id}_icon",     # icon (shortcuts are also referenced in shortcuts.vdf)
 }
@@ -226,7 +226,7 @@ class SteamUser:
             self.save_shortcuts(data)
         return changed
 
-    # ------------------------------------------------ juegos de Steam instalados
+    # ------------------------------------------------ installed Steam games
     def steam_games(self) -> list[dict]:
         libs = [self.root]
         lf = self.root / "steamapps/libraryfolders.vdf"
