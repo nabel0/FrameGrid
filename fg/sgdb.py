@@ -1,6 +1,6 @@
 # FrameGrid — Copyright (C) 2026 Javier
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Cliente mínimo de la API v2 de SteamGridDB (solo librería estándar)."""
+"""Minimal SteamGridDB API v2 client (standard library only)."""
 from __future__ import annotations
 
 import json
@@ -20,7 +20,7 @@ SLOT_QUERY = {
     "logo": ("logos", None),
     "icon": ("icons", None),
 }
-# Steam no lee webp/ico de forma fiable en la carpeta grid: nos quedamos con png/jpg (png incluye APNG animado)
+# Steam does not reliably load WebP/ICO files from the grid folder: use PNG/JPG (PNG includes animated APNG).
 MIMES = {
     "grids": "image/png,image/jpeg",
     "heroes": "image/png,image/jpeg",
@@ -48,14 +48,14 @@ class SGDB:
                 body = json.loads(r.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             if e.code == 401:
-                raise SGDBError("API key de SteamGridDB no válida (401).")
+                raise SGDBError("Invalid SteamGridDB API key (401).")
             if e.code == 404:
                 return []
-            raise SGDBError(f"SteamGridDB respondió {e.code}")
+            raise SGDBError(f"SteamGridDB returned {e.code}")
         except urllib.error.URLError as e:
-            raise SGDBError(f"Sin conexión con SteamGridDB: {e.reason}")
+            raise SGDBError(f"Could not connect to SteamGridDB: {e.reason}")
         if not body.get("success", False):
-            raise SGDBError("; ".join(body.get("errors", ["Error desconocido"])))
+            raise SGDBError("; ".join(body.get("errors", ["Unknown error"])))
         return body.get("data", [])
 
     def search(self, term: str) -> list[dict]:
@@ -98,7 +98,7 @@ def download(url: str, timeout=60) -> tuple[bytes, str]:
     ext = os.path.splitext(urllib.parse.urlparse(url).path)[1].lstrip(".").lower()
     if ext not in ("png", "jpg", "jpeg", "webp", "gif"):
         ext = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}.get(ctype.split(";")[0], "png")
-    # Comprobación por firma, por si la extensión miente
+    # Check the file signature in case the extension is misleading
     if data[:8] == b"\x89PNG\r\n\x1a\n":
         ext = "png"
     elif data[:3] == b"\xff\xd8\xff":
